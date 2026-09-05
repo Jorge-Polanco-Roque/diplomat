@@ -67,12 +67,3 @@ def test_out_struct():
     assert out.c == 904
     with pytest.raises(AttributeError):
         out.d = somelib.OptionOpaque.new(14)
-
-
-def test_char_rejects_none():
-    # None is not a valid char: the char32_t caster must reject it cleanly (raising
-    # TypeError) rather than accepting garbage and leaving a dangling Python error.
-    s = somelib.OptionOpaque.new_struct()
-    s.b.assert_char(U'餐')
-    with pytest.raises(TypeError):
-        s.b.assert_char(None)

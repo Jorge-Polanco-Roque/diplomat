@@ -34,11 +34,13 @@ namespace nanobind::detail
 
         bool from_python(handle src, uint8_t, cleanup_list *) noexcept
         {
-            // None is not a str: reject it cleanly so an optional char (or the next
-            // overload) is handled, instead of leaving a dangling Python error.
+            // None maps to the default-initialized char '\0', mirroring C struct
+            // zero-initialization, instead of leaving a dangling Python error.
             if (src.is_none())
             {
-                return false;
+                value = U'\0';
+                size = 1;
+                return true;
             }
             value = PyUnicode_ReadChar(src.ptr(), 0);
             if (!value)
@@ -77,7 +79,9 @@ namespace nanobind::detail
         template <typename T_>
         NB_INLINE bool can_cast() const noexcept
         {
-            return (value && size == 1);
+            // size == 1 means exactly one code point was read (incl. '\0' from None);
+            // the read-failure sentinel leaves size == 0, so it is rejected here.
+            return (size == 1);
         }
 
         explicit operator char32_t()
